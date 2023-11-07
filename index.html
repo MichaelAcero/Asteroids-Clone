@@ -166,19 +166,19 @@
 					ctx.stroke();
 
 					// move the asteroid
-            asteroids[i].x += asteroids[i].xv;
-            asteroids[i].y += asteroids[i].yv;
+					asteroids[i].x += asteroids[i].xv;
+					asteroids[i].y += asteroids[i].yv;
 					// handle edge of screen
-          if (asteroids[i].x < 0 - asteroids[i].r) {
-            asteroids[i].x = canv.width + asteroids[i].r;
-          } else if (asteroids[i].x > canv.width + asteroids[i].r) {
-            asteroids[i].x = 0 - asteroids[i].r;
-          }
-          if (asteroids[i].y < 0 - asteroids[i].r) {
-            asteroids[i].y = canv.height + asteroids[i].r;
-          } else if (asteroids[i].y > canv.height + asteroids[i].r) {
-            asteroids[i].y = 0 - asteroids[i].r;
-          }
+					if (asteroids[i].x < 0 - asteroids[i].r) {
+						asteroids[i].x = canv.width + asteroids[i].r;
+					} else if (asteroids[i].x > canv.width + asteroids[i].r) {
+						asteroids[i].x = 0 - asteroids[i].r;
+					}
+					if (asteroids[i].y < 0 - asteroids[i].r) {
+						asteroids[i].y = canv.height + asteroids[i].r;
+					} else if (asteroids[i].y > canv.height + asteroids[i].r) {
+						asteroids[i].y = 0 - asteroids[i].r;
+					}
 				}
 			};
 
