@@ -45,11 +45,21 @@
 			const SHIP_BLINK_DURATION = 0.1; // duration of blink
 			const SHOW_BOUNDARIES = false; // show collision boundaries
 			const SHOW_CENTER_DOT = false; // show center dot
+			const MUSIC_ON = true;
+			const SOUND_ON = true;
 			const TEXT_FADE_TIME = 2.5;
 			const TEXT_SIZE = 40;
 
 			var canv = document.getElementById("gameCanvas");
 			var ctx = canv.getContext("2d");
+
+			var soundfxLaser = new Sound("sounds/laser.m4a", 5, 0.1);
+			var soundfxExplode = new Sound("sounds/explode.m4a", 1, 0.3);
+			var soundfxHit = new Sound("sounds/hit.m4a", 5, 0.2);
+			var soundfxThrust = new Sound("sounds/thrust.m4a", 1, 0.1);
+
+			var music = new Music("sounds/music-low.m4a", "sounds/music-high.m4a");
+			var asteroidsRemaining, asteroidsTotal;
 
 			//setup game parameters
 			var level, lives, asteroids, score, scoreHigh, ship, text, textTransparency;
@@ -308,10 +318,12 @@
 				if (ship.thrusting && !ship.dead) {
 					ship.thrust.x += (SHIP_THRUST * Math.cos(ship.a)) / FPS;
 					ship.thrust.y -= (SHIP_THRUST * Math.sin(ship.a)) / FPS;
+					soundfxThrust.play();
 					drawShipWithThrust();
 				} else {
 					ship.thrust.x -= (FRICTION * ship.thrust.x) / FPS;
 					ship.thrust.y -= (FRICTION * ship.thrust.y) / FPS;
+					soundfxThrust.stop();
 				}
 
 				for (i = ship.lasers.length - 1; i >= 0; i--) {
@@ -409,6 +421,7 @@
 
 			document.addEventListener("keydown", keyDown);
 			document.addEventListener("keyup", keyUp);
+			document.addEventListener("click", clickToShoot);
 
 			// game loop
 			setInterval(update, 1000 / FPS);
@@ -488,6 +501,7 @@
 			}
 			function explodeShip() {
 				ship.explodeTime = Math.ceil(SHIP_EXPLODE_DURATION * FPS);
+				soundfxExplode.play();
 			}
 			function shootLaser() {
 				if (!exploding && ship.blinkNum === 0) {
@@ -501,6 +515,7 @@
 							explosionTime: 0,
 							distanceTraveled: 0,
 						});
+						soundfxLaser.play();
 					}
 
 					// prevent further shooting
@@ -536,7 +551,10 @@
 			}
 			function createAsteroidBelt() {
 				asteroids = [];
+				asteroidsTotal = (ASTEROIDS_NUM + level) * 7;
+				asteroidsRemaining = asteroidsTotal;
 				var x, y;
+
 				for (var i = 0; i < ASTEROIDS_NUM + level; i++) {
 					do {
 						x = Math.floor(Math.random() * canv.width);
@@ -572,6 +590,12 @@
 				}
 
 				asteroids.splice(index, 1);
+				soundfxHit.play();
+
+				asteroidsRemaining--;
+				music.setAsteroidRatio(
+					asteroidsRemaining === 0 ? 1 : asteroidsRemaining / asteroidsTotal
+				);
 
 				if (asteroids.length === 0) {
 					level++;
@@ -676,6 +700,64 @@
 						break;
 				}
 			}
+			function clickToShoot() {
+				shootLaser();
+				ship.canShoot = true;
+			}
+			function Sound(src, maxStreams = 1, vol = 1.0) {
+				this.streamNum = 0;
+				this.streams = [];
+
+				for (i = 0; i < maxStreams; i++) {
+					this.streams.push(new Audio(src));
+					this.streams[i].volume = vol;
+				}
+
+				this.play = function () {
+					if (SOUND_ON) {
+						this.streamNum = (this.streamNum + 1) % maxStreams;
+						this.streams[this.streamNum].play();
+					}
+				};
+
+				this.stop = function () {
+					this.streams[this.streamNum].pause();
+					this.streams[this.streamNum].currentTime = 0;
+				};
+			}
+			function Music(srcLow, srcHigh) {
+				this.soundLow = new Audio(srcLow);
+				this.soundLow.volume = 0.1;
+				this.soundHigh = new Audio(srcHigh);
+				this.soundHigh.volume = 0.1;
+				this.low = true;
+				this.tempo = 1.0; // seconds per beat
+				this.beatTime = 0; // frames left until next beat
+
+				this.play = function () {
+					if (MUSIC_ON) {
+						if (this.low) {
+							this.soundLow.play();
+						} else {
+							this.soundHigh.play();
+						}
+						this.low = !this.low;
+					}
+				};
+
+				this.setAsteroidRatio = function (ratio) {
+					this.tempo = 1.0 - 0.75 * (1.0 - ratio);
+				};
+
+				this.tick = function () {
+					if (this.beatTime == 0) {
+						this.play();
+						this.beatTime = Math.ceil(this.tempo * FPS);
+					} else {
+						this.beatTime--;
+					}
+				};
+			}
 
 			function update() {
 				drawBackground();
@@ -685,6 +767,7 @@
 				handleObjectMovement();
 				handleScreenEdge();
 				handleCollisions();
+				music.tick();
 			}
 		</script>
 	</body>
