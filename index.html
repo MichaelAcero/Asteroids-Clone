@@ -69,8 +69,6 @@
 			//setup game parameters
 			var level, lives, asteroids, score, scoreHigh, ship, text, textTransparency;
 			newGame();
-			var blinkOn = ship.blinkNum % 2 === 0;
-			var exploding = ship.explodeTime > 0;
 
 			const drawShipExplosion = () => {
 				ctx.fillStyle = "darkred";
@@ -149,12 +147,12 @@
 				}
 			};
 			const drawPlayerShip = () => {
-				var blinkOn = ship.blinkNum % 2 === 0;
+				blinkOn = ship.blinkNum % 2 === 0;
 				exploding = ship.explodeTime > 0;
 				// draw a triangular ship
 				if (!exploding) {
 					if (blinkOn && !ship.dead) {
-						drawShip(ship.x, ship.y, ship.a);
+            drawShip(ship.x, ship.y, ship.a)
 						drawCustomShip(customShip, ship.x, ship.y, ship.a);
 					}
 
@@ -172,7 +170,7 @@
 				if (SHOW_BOUNDARIES) {
 					ctx.strokeStyle = "lime";
 					ctx.beginPath();
-					ctx.arc(ship.x, ship.y, ship.r, 0, Math.PI * 2, false);
+					ctx.arc(ship.x, ship.y, ship.r + 15, 0, Math.PI * 2, false);
 					ctx.stroke();
 				}
 				if (SHOW_CENTER_DOT) {
@@ -204,7 +202,6 @@
 				}
 			};
 			const drawShipWithThrust = () => {
-				var blinkOn = ship.blinkNum % 2 === 0;
 				if (!exploding && blinkOn) {
 					// draw thruster
 					ctx.fillStyle = "red";
@@ -319,7 +316,7 @@
 					ship.y += ship.thrust.y;
 				}
 
-				ship.a += ship.rot; // ship rotation   
+				ship.a += ship.rot; // ship rotation
 
 				if (ship.thrusting && !ship.dead) {
 					ship.thrust.x += (SHIP_THRUST * Math.cos(ship.a)) / FPS;
@@ -486,16 +483,21 @@
 				ctx.stroke();
 			}
 			function drawCustomShip(src, x, y, a) {
-        ctx.drawImage(src, x, y);
-        
-      }
-      function newShip() {
+				ctx.save();
+				ctx.translate(x + 0 / 2, y + 0 / 2);
+				ctx.rotate(ship.a = (ship.a + ship.rot));
+				ctx.translate(-(x + 0 / 2), -(y + 0 / 2));
+				ctx.drawImage(src, x - 50, y - 49);
+				ctx.stroke();
+				ctx.restore();
+			}
+			function newShip() {
 				return {
 					dead: false,
 					x: canv.width / 2,
 					y: canv.height / 2,
-          // x: (canv.width / 2) - 49.5, // custom image default center on x axis
-          // y: (canv.height / 2) - 50, // custom image default center on y axis
+					// x: (canv.width / 2) - 49.5, // custom image default center on x axis
+					// y: (canv.height / 2) - 50, // custom image default center on y axis
 					r: SHIP_SIZE / 2, //radius
 					a: (90 / 180) * Math.PI, //converts to radians because Math. doesnt use angles
 					explodeTime: 0,
@@ -631,35 +633,35 @@
 
 					// Arrow movement controls
 					case 37: // Left Arrow
-						ship.rot = degreeConversion(TURN_SPEED);
+						ship.rot = degreeConversion(-TURN_SPEED);
 						break;
 					case 38: // Up Arrow
 						ship.thrusting = true;
 						break;
 					case 39: // Right Arrow
-						ship.rot = degreeConversion(-TURN_SPEED);
+						ship.rot = degreeConversion(TURN_SPEED);
 						break;
 
 					// WAD movement controls
 					case 65: // 'A' Key
-						ship.rot = degreeConversion(TURN_SPEED);
+						ship.rot = degreeConversion(-TURN_SPEED);
 						break;
 					case 87: // 'W' Key
 						ship.thrusting = true;
 						break;
 					case 68: // 'D' Key
-						ship.rot = degreeConversion(-TURN_SPEED);
+						ship.rot = degreeConversion(TURN_SPEED);
 						break;
 
 					// IJL movement controls for 60% keyboards
 					case 74: // 'J' Key
-						ship.rot = degreeConversion(TURN_SPEED);
+						ship.rot = degreeConversion(-TURN_SPEED);
 						break;
 					case 73: // 'I' Key
 						ship.thrusting = true;
 						break;
 					case 76: // 'L' Key
-						ship.rot = degreeConversion(-TURN_SPEED);
+						ship.rot = degreeConversion(TURN_SPEED);
 						break;
 				}
 			}
@@ -772,6 +774,9 @@
 			}
 
 			function update() {
+				var blinkOn = ship.blinkNum % 2 === 0;
+				var exploding = ship.explodeTime > 0;
+
 				drawBackground();
 				drawPlayerShip();
 				drawAsteroids();
